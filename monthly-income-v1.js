@@ -1,0 +1,14 @@
+(()=>{
+function ensureMonthlyIncome(){d.incomeHistory=d.incomeHistory||{};if(!Object.prototype.hasOwnProperty.call(d.incomeHistory,monthNow()))d.incomeHistory[monthNow()]=Math.max(0,Number(d.salary||0))+Math.max(0,Number(d.extra||0));localStorage.setItem(KEY,JSON.stringify(d))}
+function monthlyIncome(m=monthNow()){if(Object.prototype.hasOwnProperty.call(d.incomeHistory,m))return Math.max(0,Number(d.incomeHistory[m]||0));return m>=monthNow()?Math.max(0,Number(d.salary||0)):0}
+window.monthlyIncome=monthlyIncome;
+window.incomeFor=function(m){return monthlyIncome(m)};
+function syncCurrentIncome(){let m=monthNow();if(document.activeElement?.id==='salary')return;let el=document.getElementById('salary');if(el)el.value=monthlyIncome(m)}
+function saveCurrentIncome(v){let amount=Math.max(0,Number(v||0));d.incomeHistory[monthNow()]=amount;localStorage.setItem(KEY,JSON.stringify(d));persist()}
+window.saveCurrentIncome=saveCurrentIncome;
+function patchIncomeField(){let el=document.getElementById('salary');if(!el||el.dataset.monthlyIncome==='1')return;el.dataset.monthlyIncome='1';el.value=monthlyIncome();el.onchange=()=>saveCurrentIncome(el.value);el.onblur=()=>saveCurrentIncome(el.value);let setting=el.closest('.setting');let name=setting?.querySelector('.name'),meta=setting?.querySelector('.meta');if(name)name.textContent='Entrate totali del mese';if(meta)meta.textContent=`Modificabili ogni mese · base abituale ${eur(d.salary)}`;}
+const oldTotal=window.totalIncome;window.totalIncome=function(){return monthlyIncome(monthNow())};
+const oldBudget=window.budgetModel;window.budgetModel=function(){let income=monthlyIncome(monthNow()),fixed=fixedMonthly(),ess=essentialTotal(),goalNeed=d.goals.reduce((s,g)=>s+theoretical(g),0),afterObligations=Math.max(0,income-fixed-ess),floor=typeof baseLife==='function'?baseLife():Math.max(0,Number(d.lifeBase??d.life??200)),afterGoals=Math.max(0,afterObligations-goalNeed),bonus=Math.max(0,afterGoals-floor),buffer=Math.max(0,bonus*.35),life=Math.max(0,Math.min(afterObligations,floor+Math.max(0,bonus-buffer))),goalCapacity=Math.max(0,afterObligations-life),free=Math.max(0,afterObligations-goalNeed-life);return{income,fixed,ess,goalNeed,afterObligations,life,goalCapacity,free}};
+function enhance(){patchIncomeField();syncCurrentIncome();let model=window.budgetModel?budgetModel():null;let heroLabel=document.querySelector('.heroGrid .heroMini:last-child span'),heroValue=document.querySelector('.heroGrid .heroMini:last-child b');if(model&&heroLabel&&heroValue){heroLabel.textContent='Entrate mese';heroValue.textContent=eur(model.income)}}
+ensureMonthlyIncome();setTimeout(enhance,0);const oldRender=window.render;if(oldRender&&!oldRender.__monthlyIncome){let nr=function(){oldRender();enhance()};nr.__monthlyIncome=true;window.render=nr;window.render()}
+})();
