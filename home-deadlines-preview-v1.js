@@ -1,0 +1,15 @@
+(()=>{
+function fmtDeadlineDate(s){if(!s)return'—';return new Date(s+'T12:00:00').toLocaleDateString('it-IT',{day:'2-digit',month:'short'})}
+function deadlineDays(s){if(!s)return Infinity;const a=new Date(),b=new Date(s+'T23:59:59');a.setHours(0,0,0,0);return Math.ceil((b-a)/86400000)}
+function statusFor(x){const days=deadlineDays(x.next);if(days<0)return{label:'SCADUTA',tone:'bad'};if(days===0)return{label:'OGGI',tone:'warn'};if(days<=7)return{label:`${days} GG`,tone:'warn'};return{label:fmtDeadlineDate(x.next).toUpperCase(),tone:'good'}}
+function renderHomeDeadlinesPreview(){
+ const box=document.getElementById('homeDeadlines');if(!box)return;
+ const items=[...(d.deadlines||[])].filter(x=>x&&x.next).sort((a,b)=>String(a.next).localeCompare(String(b.next))).slice(0,3);
+ if(!items.length){box.innerHTML='<div class="empty">Nessuna scadenza registrata.</div>';return}
+ box.innerHTML=items.map(x=>{const s=statusFor(x);return `<button class="homeDeadlinePreview" onclick="openTab('deadlines')"><span class="homeDeadlineIcon">◷</span><span class="homeDeadlineMain"><strong>${esc(x.name)}</strong><small>${esc(x.freq||'')} · ${fmtDeadlineDate(x.next)}</small></span><span class="homeDeadlineSide"><b>${eur(x.amount)}</b><em class="${s.tone}">${s.label}</em></span></button>`}).join('')
+}
+const css=document.createElement('style');css.textContent=`
+#homeDeadlines{display:grid;gap:8px}.homeDeadlinePreview{width:100%;display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:11px;align-items:center;background:linear-gradient(145deg,#fff,#fafbfe);color:var(--ink);border:1px solid #edf0f5;border-radius:16px;padding:12px;text-align:left;min-height:0}.homeDeadlinePreview:active{transform:scale(.99)}.homeDeadlineIcon{width:40px;height:40px;display:grid;place-items:center;border-radius:13px;background:#eef4ff;color:#315a9d;font-size:18px}.homeDeadlineMain{min-width:0}.homeDeadlineMain strong{display:block;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.homeDeadlineMain small{display:block;margin-top:4px;font-size:11px;color:var(--muted)}.homeDeadlineSide{text-align:right;display:grid;justify-items:end;gap:4px}.homeDeadlineSide b{font-size:14px;white-space:nowrap}.homeDeadlineSide em{font-style:normal;font-size:9px;font-weight:900;letter-spacing:.04em;padding:4px 6px;border-radius:999px;background:#eef2f7;color:#64748b}.homeDeadlineSide em.good{background:#e8f8ef;color:#16834a}.homeDeadlineSide em.warn{background:#fff4df;color:#b66a0d}.homeDeadlineSide em.bad{background:#ffebeb;color:#c92b2b}@media(max-width:390px){.homeDeadlinePreview{grid-template-columns:36px minmax(0,1fr) auto;padding:11px 10px}.homeDeadlineIcon{width:36px;height:36px}.homeDeadlineMain strong{font-size:13px}.homeDeadlineSide b{font-size:13px}}
+`;document.head.appendChild(css);
+setTimeout(renderHomeDeadlinesPreview,0);const prev=window.render;if(prev&&!prev.__homeDeadlinesPreviewV1){const nr=function(){prev();renderHomeDeadlinesPreview()};nr.__homeDeadlinesPreviewV1=true;window.render=nr;window.render()}
+})();
