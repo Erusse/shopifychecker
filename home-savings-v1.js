@@ -1,0 +1,22 @@
+(()=>{
+function goalContributionsThisMonth(){
+ const m=monthNow();
+ // Goal contributions are stored as goal-type transactions when available.
+ const tx=(d.transactions||[]).filter(x=>String(x.date||'').slice(0,7)===m);
+ return tx.filter(x=>x.type==='goal'||x.kind==='goal'||x.category==='Obiettivi'||x.cat==='Obiettivi').reduce((s,x)=>s+Number(x.amount||0),0);
+}
+function savingsData(){
+ const m=monthNow(),income=Number(incomeFor(m)||0),out=Number(monthTotal(m)||0),monthly=Math.max(0,income-out),allocated=Math.max(0,goalContributionsThisMonth()),free=Math.max(0,monthly-allocated);
+ return{income,out,monthly,allocated,free};
+}
+function renderHomeSavings(){
+ const hero=document.querySelector('#home .heroGrid');if(!hero)return;
+ let box=document.getElementById('homeSavingsSummary');
+ if(!box){box=document.createElement('div');box.id='homeSavingsSummary';box.className='homeSavingsSummary';const h=document.querySelector('#home .hero');h&&h.insertAdjacentElement('afterend',box)}
+ const x=savingsData();
+ box.innerHTML=`<div class="savingsHead"><div><span class="eyebrow">RISPARMIO DEL MESE</span><strong>${eur(x.monthly)}</strong></div><small>Entrate − uscite registrate</small></div><div class="savingsGrid"><div><span>Accantonato agli obiettivi</span><b>${eur(x.allocated)}</b></div><div><span>Ancora libero</span><b>${eur(x.free)}</b></div></div>`;
+ const save=document.getElementById('saveM');if(save){save.textContent=eur(x.monthly);const label=save.previousElementSibling;if(label)label.textContent='Risparmio del mese'}
+}
+const css=document.createElement('style');css.textContent=`.homeSavingsSummary{background:#fff;border:1px solid var(--line);border-radius:22px;padding:17px 18px;margin:-2px 0 14px;box-shadow:0 6px 22px #10182808}.savingsHead{display:flex;justify-content:space-between;align-items:end;gap:12px;padding-bottom:13px;border-bottom:1px solid var(--line)}.savingsHead strong{display:block;font-size:27px;letter-spacing:-1px}.savingsHead small{font-size:10px;color:var(--muted);text-align:right}.savingsGrid{display:grid;grid-template-columns:1fr 1fr;gap:9px;padding-top:12px}.savingsGrid>div{background:var(--soft);border-radius:14px;padding:11px}.savingsGrid span{display:block;color:var(--muted);font-size:10px;line-height:1.25;margin-bottom:3px}.savingsGrid b{font-size:15px}@media(max-width:390px){.savingsHead{align-items:start;flex-direction:column;gap:3px}.savingsHead small{text-align:left}.homeSavingsSummary{padding:15px}}`;document.head.appendChild(css);
+setTimeout(renderHomeSavings,0);const prev=window.render;if(prev&&!prev.__homeSavingsV1){const nr=function(){prev();renderHomeSavings()};nr.__homeSavingsV1=true;window.render=nr;window.render()}
+})();
