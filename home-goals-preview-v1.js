@@ -1,0 +1,15 @@
+(()=>{
+function previewStatusClass(s){return s==='IN LINEA'||s==='COMPLETATO'?'good':s==='DATA POSTICIPATA'?'warn':'bad'}
+function iconForGoal(name){name=String(name||'').toLowerCase();if(name.includes('matrimonio'))return'💍';if(name.includes('casa'))return'🏠';if(name.includes('salvagente'))return'🛟';if(name.includes('auto')||name.includes('macchina'))return'🚗';if(name.includes('vacanza')||name.includes('viaggio'))return'✈️';return'◎'}
+function renderHomeGoalPreview(){
+ const box=document.getElementById('goalPreview');if(!box)return;
+ const plan=typeof goalPlan==='function'?goalPlan():null,goals=(plan?.goals||[]).slice().sort((a,b)=>(a.priority||99)-(b.priority||99)).slice(0,3);
+ if(!goals.length){box.innerHTML='<div class="empty">Nessun obiettivo attivo.</div>';return}
+ box.innerHTML=goals.map(g=>{const pct=g.target?Math.min(100,Math.max(0,g.saved/g.target*100)):0;return `<button class="homeGoalPreview" onclick="openTab('goals')"><span class="homeGoalIcon">${iconForGoal(g.name)}</span><span class="homeGoalMain"><span class="homeGoalHead"><strong>${esc(g.name)}</strong><span class="pill ${previewStatusClass(g.status)}">P${g.priority} · ${g.status}</span></span><span class="homeGoalMeta">${eur(g.saved)} di ${eur(g.target)} · ${eur(g.assigned||0)}/mese</span><span class="homeGoalBar"><i style="width:${pct}%"></i></span></span><span class="homeGoalPct">${Math.round(pct)}%</span></button>`}).join('')
+}
+const css=document.createElement('style');css.textContent=`
+#goalPreview{display:grid;gap:9px}.homeGoalPreview{width:100%;display:grid;grid-template-columns:40px minmax(0,1fr) auto;align-items:center;gap:11px;background:linear-gradient(145deg,#fff,#fafbfe);color:var(--ink);border:1px solid var(--line);border-radius:17px;padding:12px;text-align:left;min-height:0}.homeGoalPreview:active{transform:scale(.99)}.homeGoalIcon{width:40px;height:40px;border-radius:13px;background:#f4f1ff;display:grid;place-items:center;font-size:19px}.homeGoalMain{min-width:0}.homeGoalHead{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.homeGoalHead strong{font-size:13px;line-height:1.25}.homeGoalMeta{display:block;font-size:10.5px;color:var(--muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.homeGoalBar{display:block;height:6px;background:#edf0f5;border-radius:99px;overflow:hidden;margin-top:7px}.homeGoalBar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#7c3aed,#a78bfa)}.homeGoalPct{font-size:11px;font-weight:850;color:#6d5ac7}@media(max-width:480px){.homeGoalPreview{grid-template-columns:36px minmax(0,1fr) auto;padding:11px 10px;gap:9px}.homeGoalIcon{width:36px;height:36px;border-radius:11px;font-size:17px}.homeGoalHead strong{font-size:12.5px}.homeGoalHead .pill{font-size:8px;padding:3px 5px}.homeGoalMeta{font-size:9.5px}.homeGoalPct{font-size:10px}}
+`;document.head.appendChild(css);
+function enhance(){renderHomeGoalPreview()}
+setTimeout(enhance,0);const prev=window.render;if(prev&&!prev.__homeGoalsPreview){const nr=function(){prev();enhance()};nr.__homeGoalsPreview=true;window.render=nr;window.render()}
+})();
